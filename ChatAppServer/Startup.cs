@@ -1,8 +1,10 @@
 using ChatAppServer.ClientConnections;
 using ChatAppServer.ClientHubs;
+using ChatAppServer.DataAccess;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +24,17 @@ namespace ChatAppServer
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddDbContext<ChatDbContext>(options =>
+			{
+				var databaseConnectionSettings = Configuration.GetSection("DatabaseConnection");
+				var host = databaseConnectionSettings["Host"];
+				var database = databaseConnectionSettings["Database"];
+				var username = databaseConnectionSettings["Username"];
+				var password = databaseConnectionSettings["Password"];
+
+				options.UseNpgsql($"Host={host};Database={database};Username={username};Password={password}");
+			});
+
 			services.AddRouting(options => options.LowercaseUrls = true);
 			services.AddControllers();
 			services.AddSwaggerGen(c =>
