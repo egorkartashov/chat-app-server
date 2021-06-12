@@ -1,18 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ChatAppServer.ClientConnections;
 using ChatAppServer.ClientHubs;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 namespace ChatAppServer
@@ -29,24 +22,29 @@ namespace ChatAppServer
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddRouting(options => options.LowercaseUrls = true);
 			services.AddControllers();
 			services.AddSwaggerGen(c =>
 			{
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "ChatAppServer", Version = "v1" });
 			});
+			
+			services.AddCors(options =>
+			{
+				options.AddPolicy("AllowAllHeaders",
+					builder =>
+					{
+						builder.AllowAnyOrigin()
+							.AllowAnyHeader()
+							.AllowAnyMethod()
+							.WithOrigins("http://localhost:4200");
+					});
+			});
 
 			services.AddSignalR();
 
-			// services.AddCors(options =>
-			// {
-			// 	options.AddPolicy("AllowAllHeaders",
-			// 		builder =>
-			// 		{
-			// 			builder.AllowAnyOrigin()
-			// 				.AllowAnyHeader()
-			// 				.AllowAnyMethod();
-			// 		});
-			// });
+			services.AddSingleton<IClientConnectionsCache, ClientConnectionsCache>();
+			// services.AddSingleton<IGoogleClientSecretsProvider>(new GoogleClientSecretsProvider(Configuration));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,8 +72,6 @@ namespace ChatAppServer
 				options.WithOrigins("http://localhost:4200");
 				options.AllowCredentials();
 			});
-
-			// app.UseAuthorization();
 
 			app.UseEndpoints(endpoints =>
 			{
