@@ -1,16 +1,17 @@
-﻿using ChatAppServer.Auth;
+﻿using ChatAppServer.Models;
 
 namespace ChatAppServer.ClientConnections
 {
 	public class ClientConnection
 	{
-		public ClientConnection(string accessToken, GoogleUserInfo googleUserInfo)
+		public ClientConnection(string accessToken, User user)
 		{
 			AccessToken = accessToken;
-			GoogleUserInfo = googleUserInfo;
+			User = user;
 		}
 		
 		public string AccessToken { get;}
-		public GoogleUserInfo GoogleUserInfo { get; }
+
+		public User User { get; set; }
 	}
 }

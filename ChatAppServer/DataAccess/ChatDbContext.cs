@@ -9,6 +9,21 @@ namespace ChatAppServer.DataAccess
 		{
 		}
 		
-		public DbSet<DummyEntity> DummyEntities { get; set; }
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			modelBuilder.Entity<ChatroomEntity>()
+				.HasMany(chatroom => chatroom.Members)
+				.WithMany(member => member.Chatrooms)
+				.UsingEntity(join => join.ToTable("ChatroomMember"));
+
+			modelBuilder.Entity<ChatroomEntity>()
+				.HasOne(chatroom => chatroom.Owner)
+				.WithMany(user => user.OwnedChatrooms)
+				.HasForeignKey(chatroom => chatroom.OwnerId);
+		}
+
+		public DbSet<UserEntity> Users { get; set; }
+		public DbSet<ChatroomEntity> Chatrooms { get; set; }
+		public DbSet<ChatroomMessageEntity> ChatroomMessages { get; set; }
 	}
 }

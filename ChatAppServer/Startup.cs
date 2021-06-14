@@ -1,6 +1,11 @@
+using AutoMapper;
+using ChatAppServer.Auth;
 using ChatAppServer.ClientConnections;
 using ChatAppServer.ClientHubs;
 using ChatAppServer.DataAccess;
+using ChatAppServer.DataAccess.Entities;
+using ChatAppServer.Models;
+using ChatAppServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -56,8 +61,7 @@ namespace ChatAppServer
 
 			services.AddSignalR();
 
-			services.AddSingleton<IClientConnectionsCache, ClientConnectionsCache>();
-			// services.AddSingleton<IGoogleClientSecretsProvider>(new GoogleClientSecretsProvider(Configuration));
+			RegisterServices(services);
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -89,8 +93,33 @@ namespace ChatAppServer
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapControllers();
-				endpoints.MapHub<UsersHub>("/signalr");
+				endpoints.MapHub<ClientHub>("/chatshub");
 			});
+		}
+
+		private void RegisterServices(IServiceCollection services)
+		{
+			var autoMapper = ConfigureAutoMapper();
+			services.AddSingleton(autoMapper);
+			
+			services.AddSingleton<IClientConnectionsCache, ClientConnectionsCache>();
+			// services.AddSingleton<IGoogleClientSecretsProvider>(new GoogleClientSecretsProvider(Configuration));
+			services.AddScoped<IUsersService, UsersService>();
+			services.AddScoped<IChatsService, ChatsService>();
+			services.AddScoped<IMessagesService, MessagesService>();
+		}
+
+		private static IMapper ConfigureAutoMapper()
+		{
+			var config = new MapperConfiguration(cfg =>
+			{
+				cfg.CreateMap<User, UserEntity>();
+				cfg.CreateMap<UserEntity, User>();
+				cfg.CreateMap<GoogleUserInfo, User>();
+			});
+
+			var mapper = config.CreateMapper();
+			return mapper;
 		}
 	}
 }
