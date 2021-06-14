@@ -119,7 +119,8 @@ namespace ChatAppServer.Migrations
                 {
                     b.HasOne("ChatAppServer.DataAccess.Entities.ChatroomEntity", "Chatroom")
                         .WithMany("Messages")
-                        .HasForeignKey("ChatroomId");
+                        .HasForeignKey("ChatroomId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ChatAppServer.DataAccess.Entities.UserEntity", "Sender")
                         .WithMany()

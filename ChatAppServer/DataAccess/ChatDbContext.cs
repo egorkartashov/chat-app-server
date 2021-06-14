@@ -20,6 +20,11 @@ namespace ChatAppServer.DataAccess
 				.HasOne(chatroom => chatroom.Owner)
 				.WithMany(user => user.OwnedChatrooms)
 				.HasForeignKey(chatroom => chatroom.OwnerId);
+
+			modelBuilder.Entity<ChatroomEntity>()
+				.HasMany(chatroom => chatroom.Messages)
+				.WithOne(message => message.Chatroom)
+				.OnDelete(DeleteBehavior.Cascade);
 		}
 
 		public DbSet<UserEntity> Users { get; set; }

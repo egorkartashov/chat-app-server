@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ChatAppServer.DataAccess;
 using ChatAppServer.DataAccess.Entities;
@@ -18,7 +19,7 @@ namespace ChatAppServer.Services
 			_chatDbContext = chatDbContext;
 		}
 		
-		public async Task<bool> SaveMessageAsync(Guid senderId, Guid chatId, MessageDto messageDto)
+		public async Task<bool> SaveMessageToChatAsync(Guid senderId, Guid chatId, MessageDto messageDto)
 		{
 			try
 			{
@@ -88,6 +89,29 @@ namespace ChatAppServer.Services
 				Console.WriteLine(e);
 				return false;
 			}
+		}
+
+		public async Task<List<MessageDto>> GetChatMessagesAsync(Guid chatId)
+		{
+			var chatroom = await _chatDbContext.Chatrooms
+				               .Include(chat => chat.Messages)
+				               .ThenInclude(message => message.Sender)
+				               .FirstOrDefaultAsync(chat => chat.Id == chatId);
+
+			if (chatroom == null)
+				return new List<MessageDto>();
+
+			var messages = chatroom.Messages
+				.OrderBy(message => message.SentTime)
+				.Select(message => new MessageDto
+				{
+					SenderEmail = message.Sender.Email,
+					Text = message.Text,
+					SentTimeUtc = DateTime.SpecifyKind(message.SentTime, DateTimeKind.Utc),
+				})
+				.ToList();
+
+			return messages;
 		}
 	}
 }

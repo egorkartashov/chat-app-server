@@ -34,13 +34,34 @@ namespace ChatAppServer.ClientHubs
 
 		public async Task SendPersonalMessageAsync(string receiverEmail, MessageDto messageDto)
 		{
-			Console.WriteLine($"SendMessageAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
+			Console.WriteLine($"SendPersonalMessageAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
 			if (_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
 			{
 				var userId = clientConnection.User.Id;
 				try
 				{
 					var messageSaved = await _messagesService.SavePersonalMessageAsync(userId, receiverEmail, messageDto);
+					if (messageSaved)
+					{
+						// TODO send new message to other members of chatroom
+					}
+				}
+				catch (UserNotFoundException e)
+				{
+					await Clients.Client(Context.ConnectionId).NotifyMessageReceivedAsync($"User not found: {e.Email}");
+				}
+			}
+		}
+
+		public async Task SendMessageToChatAsync(Guid chatId, MessageDto messageDto)
+		{
+			Console.WriteLine($"SendMessageToChatAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
+			if (_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
+			{
+				var userId = clientConnection.User.Id;
+				try
+				{
+					var messageSaved = await _messagesService.SaveMessageToChatAsync(userId, chatId, messageDto);
 					if (messageSaved)
 					{
 						// TODO send new message to other members of chatroom
@@ -70,6 +91,36 @@ namespace ChatAppServer.ClientHubs
 			return chatsDtos;
 		}
 
+		public async Task<List<MessageDto>> GetMessagesAsync(Guid chatId)
+		{
+			Console.WriteLine($"GetMessagesAsync, chatId = {chatId}");
+			var messages = await _messagesService.GetChatMessagesAsync(chatId);
+			return messages;
+		}
+
+		public async Task CreateChatroomAsync(ChatroomDto chatroomDto)
+		{
+			var connectionId = Context.ConnectionId;
+			Console.WriteLine($"CreateChatroomAsync, chatroomDto = {JsonConvert.SerializeObject(chatroomDto)}");
+			
+			try
+			{
+				if (!_clientConnectionsCache.TryGetClientConnection(connectionId, out var clientConnection))
+				{
+					await Clients.Client(connectionId).NotifyMessageReceivedAsync("Did not find client connection");
+					return;
+				}
+
+				await _chatsService.CreateChatroomAsync(clientConnection.User.Id, chatroomDto);
+				await Clients.Client(connectionId).NotifyMessageReceivedAsync("Successfully created chatroom!");
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);	
+				await Clients.Client(connectionId).NotifyMessageReceivedAsync("Internal server error while creating chatroom");
+			}
+		}
+		
 		public override async Task OnConnectedAsync()
 		{
 			var httpContext = Context.GetHttpContext();

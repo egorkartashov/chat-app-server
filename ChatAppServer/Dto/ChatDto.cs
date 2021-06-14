@@ -8,8 +8,8 @@ namespace ChatAppServer.Dto
 		public Guid Id { get; set; }
 		public IEnumerable<string> MembersEmails { get; set; }
 		public string Name { get; set; }
-		public DateTime LastMessageTime { get; set; }
-		public string LastMessage { get; set; }
+		public DateTime? LastMessageTime { get; set; }
+		public string? LastMessage { get; set; }
 	}
 
 	public enum ChatType
