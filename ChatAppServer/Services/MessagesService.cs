@@ -6,6 +6,7 @@ using ChatAppServer.DataAccess;
 using ChatAppServer.DataAccess.Entities;
 using ChatAppServer.Dto;
 using ChatAppServer.Exceptions;
+using ChatAppServer.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatAppServer.Services
@@ -19,11 +20,14 @@ namespace ChatAppServer.Services
 			_chatDbContext = chatDbContext;
 		}
 		
-		public async Task<bool> SaveMessageToChatAsync(Guid senderId, Guid chatId, MessageDto messageDto)
+		public async Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, MessageDto messageDto)
 		{
 			try
 			{
-				var chatroom = await _chatDbContext.Chatrooms.FindAsync(chatId);
+				var chatroom = await _chatDbContext.Chatrooms
+					               .Include(chat => chat.Members)
+					               .FirstOrDefaultAsync(chat => chat.Id == chatId);
+				
 				if (chatroom == null)
 					throw new ChatroomNotFoundException(chatId);
 
@@ -42,16 +46,32 @@ namespace ChatAppServer.Services
 				await _chatDbContext.ChatroomMessages.AddAsync(chatroomMessageEntity);
 				await _chatDbContext.SaveChangesAsync();
 
-				return true;
+				var addedMessageDto = new MessageDto
+				{
+					Text = messageDto.Text,
+					SentTimeUtc = messageDto.SentTimeUtc,
+					SenderEmail = sender.Email,
+					SenderId = senderId,
+					SenderName = sender.Name,
+				};
+
+				var saveMessageResult = new SaveMessageResult
+				{
+					ChatId = chatroom.Id,
+					Message = addedMessageDto,
+					UserIdsToNotify = chatroom.Members.Select(member => member.Id),
+				};
+				
+				return saveMessageResult;
 			}
 			catch (Exception e)
 			{
 				Console.WriteLine(e);
-				return false;
+				return null;
 			}
 		}
 
-		public async Task<bool> SavePersonalMessageAsync(Guid senderId, string receiverEmail, MessageDto messageDto)
+		public async Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail, MessageDto messageDto)
 		{
 			try
 			{
@@ -82,12 +102,28 @@ namespace ChatAppServer.Services
 				await _chatDbContext.ChatroomMessages.AddAsync(chatroomMessageEntity);
 				await _chatDbContext.SaveChangesAsync();
 
-				return true;
+				var addedMessageDto = new MessageDto
+				{
+					Text = messageDto.Text,
+					SentTimeUtc = messageDto.SentTimeUtc,
+					SenderEmail = sender.Email,
+					SenderId = senderId,
+					SenderName = sender.Name,
+				};
+
+				var saveMessageResult = new SaveMessageResult
+				{
+					ChatId = chatroomEntity.Id,
+					Message = addedMessageDto,
+					UserIdsToNotify = chatroomEntity.Members.Select(member => member.Id),
+				};
+
+				return saveMessageResult;
 			}
 			catch (Exception e)
 			{
 				Console.WriteLine(e);
-				return false;
+				return null;
 			}
 		}
 
@@ -108,6 +144,8 @@ namespace ChatAppServer.Services
 					SenderEmail = message.Sender.Email,
 					Text = message.Text,
 					SentTimeUtc = DateTime.SpecifyKind(message.SentTime, DateTimeKind.Utc),
+					SenderName = message.Sender.Name,
+					SenderId = message.Sender.Id,
 				})
 				.ToList();
 

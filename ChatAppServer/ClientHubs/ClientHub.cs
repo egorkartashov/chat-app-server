@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ChatAppServer.Auth;
 using ChatAppServer.ClientConnections;
@@ -40,10 +41,14 @@ namespace ChatAppServer.ClientHubs
 				var userId = clientConnection.User.Id;
 				try
 				{
-					var messageSaved = await _messagesService.SavePersonalMessageAsync(userId, receiverEmail, messageDto);
-					if (messageSaved)
+					var saveMessageResult = await _messagesService.SavePersonalMessageAsync(userId, receiverEmail, messageDto);
+					if (saveMessageResult != null)
 					{
-						// TODO send new message to other members of chatroom
+						var (chatId, message, userIdsToNotify) = saveMessageResult;
+						var connectionIds = _clientConnectionsCache.GetActiveConnectionIds(userIdsToNotify)
+							.Where(id => id != Context.ConnectionId);
+						
+						await Clients.Clients(connectionIds).NotifyNewMessagePostedAsync(chatId, message);
 					}
 				}
 				catch (UserNotFoundException e)
@@ -61,10 +66,14 @@ namespace ChatAppServer.ClientHubs
 				var userId = clientConnection.User.Id;
 				try
 				{
-					var messageSaved = await _messagesService.SaveMessageToChatAsync(userId, chatId, messageDto);
-					if (messageSaved)
+					var saveMessageResult = await _messagesService.SaveMessageToChatAsync(userId, chatId, messageDto);
+					if (saveMessageResult != null)
 					{
-						// TODO send new message to other members of chatroom
+						var (_, message, userIdsToNotify) = saveMessageResult;
+						var connectionIds = _clientConnectionsCache.GetActiveConnectionIds(userIdsToNotify)
+							.Where(id => id != Context.ConnectionId);
+						
+						await Clients.Clients(connectionIds).NotifyNewMessagePostedAsync(chatId, message);
 					}
 				}
 				catch (UserNotFoundException e)

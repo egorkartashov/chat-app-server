@@ -10,8 +10,12 @@ namespace ChatAppServer.Dto
 		
 		[JsonProperty("text")]
 		public string Text { get; set; }
-
+		
+		public Guid SenderId { get; set; }
+		
 		[JsonProperty("senderEmail")]
 		public string SenderEmail { get; set; }
+
+		public string SenderName { get; set; }
 	}
 }
