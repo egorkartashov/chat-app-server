@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 
 namespace ChatAppServer
 {
@@ -32,12 +33,19 @@ namespace ChatAppServer
 			services.AddDbContext<ChatDbContext>(options =>
 			{
 				var databaseConnectionSettings = Configuration.GetSection("DatabaseConnection");
-				var host = databaseConnectionSettings["Host"];
-				var database = databaseConnectionSettings["Database"];
-				var username = databaseConnectionSettings["Username"];
-				var password = databaseConnectionSettings["Password"];
 
-				options.UseNpgsql($"Host={host};Database={database};Username={username};Password={password}");
+				var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+				{
+					Host = databaseConnectionSettings["Host"],
+					Database = databaseConnectionSettings["Database"],
+					Username = databaseConnectionSettings["Username"],
+					Password = databaseConnectionSettings["Password"],
+					SslMode = SslMode.Require,
+					TrustServerCertificate = true,
+					Pooling = true,
+				};
+
+				options.UseNpgsql(connectionStringBuilder.ToString());
 			});
 
 			services.AddRouting(options => options.LowercaseUrls = true);

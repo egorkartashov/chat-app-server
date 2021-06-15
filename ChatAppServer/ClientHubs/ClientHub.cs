@@ -33,7 +33,7 @@ namespace ChatAppServer.ClientHubs
 			_messagesService = messagesService;
 		}
 
-		public async Task SendPersonalMessageAsync(string receiverEmail, MessageDto messageDto)
+		public async Task SendPersonalMessageAsync(string receiverEmail, NewMessageDto messageDto)
 		{
 			Console.WriteLine($"SendPersonalMessageAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
 			if (_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
@@ -41,13 +41,13 @@ namespace ChatAppServer.ClientHubs
 				var userId = clientConnection.User.Id;
 				try
 				{
-					var saveMessageResult = await _messagesService.SavePersonalMessageAsync(userId, receiverEmail, messageDto);
+					var saveMessageResult = await _messagesService.SavePersonalMessageAsync(userId, 
+						receiverEmail, messageDto);
+					
 					if (saveMessageResult != null)
 					{
 						var (chatId, message, userIdsToNotify) = saveMessageResult;
-						var connectionIds = _clientConnectionsCache.GetActiveConnectionIds(userIdsToNotify)
-							.Where(id => id != Context.ConnectionId);
-						
+						var connectionIds = _clientConnectionsCache.GetActiveConnectionIds(userIdsToNotify);
 						await Clients.Clients(connectionIds).NotifyNewMessagePostedAsync(chatId, message);
 					}
 				}
@@ -58,7 +58,7 @@ namespace ChatAppServer.ClientHubs
 			}
 		}
 
-		public async Task SendMessageToChatAsync(Guid chatId, MessageDto messageDto)
+		public async Task SendMessageToChatAsync(Guid chatId, NewMessageDto messageDto)
 		{
 			Console.WriteLine($"SendMessageToChatAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
 			if (_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
@@ -70,9 +70,7 @@ namespace ChatAppServer.ClientHubs
 					if (saveMessageResult != null)
 					{
 						var (_, message, userIdsToNotify) = saveMessageResult;
-						var connectionIds = _clientConnectionsCache.GetActiveConnectionIds(userIdsToNotify)
-							.Where(id => id != Context.ConnectionId);
-						
+						var connectionIds = _clientConnectionsCache.GetActiveConnectionIds(userIdsToNotify);
 						await Clients.Clients(connectionIds).NotifyNewMessagePostedAsync(chatId, message);
 					}
 				}
@@ -144,6 +142,7 @@ namespace ChatAppServer.ClientHubs
 					var googleUserInfo = ConvertPayloadToGoogleUserInfo(payload);
 
 					var user = await _usersService.AuthGoogleUserAsync(googleUserInfo);
+					Console.WriteLine($"Authenticated user: {JsonConvert.SerializeObject(user)}");
 					
 					_clientConnectionsCache.SaveClientConnection(connectionId, new ClientConnection(accessToken, user));
 				}
@@ -162,6 +161,7 @@ namespace ChatAppServer.ClientHubs
 			{
 				var exceptionJson = JsonConvert.SerializeObject(exception);
 				Console.WriteLine(exceptionJson);
+				await Clients.Client(connectionId).NotifyMessageReceivedAsync("User not found");
 				await base.OnConnectedAsync();
 			}
 		}

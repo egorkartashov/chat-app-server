@@ -8,9 +8,9 @@ namespace ChatAppServer.Services
 {
 	public interface IMessagesService
 	{
-		Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, MessageDto messageDto);
+		Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, NewMessageDto messageDto);
 
-		Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail, MessageDto messageDto);
+		Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail, NewMessageDto messageDto);
 
 		Task<List<MessageDto>> GetChatMessagesAsync(Guid chatId);
 	}

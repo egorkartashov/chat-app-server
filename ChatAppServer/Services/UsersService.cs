@@ -40,6 +40,7 @@ namespace ChatAppServer.Services
 					var newUserEntity = _mapper.Map<UserEntity>(user);
 					await _chatDbContext.Users.AddAsync(newUserEntity);
 					await _chatDbContext.SaveChangesAsync();
+					user = _mapper.Map<User>(newUserEntity);
 				}
 
 				return user;

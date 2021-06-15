@@ -46,7 +46,9 @@ namespace ChatAppServer.Services
 					Name = almostDto.Name,
 					MembersEmails = almostDto.MembersEmails,
 					LastMessage = almostDto.LastMessage?.Text,
-					LastMessageTime = almostDto.LastMessage?.SentTime,
+					LastMessageTime = almostDto.LastMessage != null 
+						? DateTime.SpecifyKind(almostDto.LastMessage.SentTime, DateTimeKind.Utc) 
+						: null,
 				})
 				.ToList();
 

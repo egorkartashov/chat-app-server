@@ -20,7 +20,7 @@ namespace ChatAppServer.Services
 			_chatDbContext = chatDbContext;
 		}
 		
-		public async Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, MessageDto messageDto)
+		public async Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, NewMessageDto messageDto)
 		{
 			try
 			{
@@ -51,7 +51,6 @@ namespace ChatAppServer.Services
 					Text = messageDto.Text,
 					SentTimeUtc = messageDto.SentTimeUtc,
 					SenderEmail = sender.Email,
-					SenderId = senderId,
 					SenderName = sender.Name,
 				};
 
@@ -71,7 +70,8 @@ namespace ChatAppServer.Services
 			}
 		}
 
-		public async Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail, MessageDto messageDto)
+		public async Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail, 
+			NewMessageDto messageDto)
 		{
 			try
 			{
@@ -107,7 +107,6 @@ namespace ChatAppServer.Services
 					Text = messageDto.Text,
 					SentTimeUtc = messageDto.SentTimeUtc,
 					SenderEmail = sender.Email,
-					SenderId = senderId,
 					SenderName = sender.Name,
 				};
 
@@ -141,11 +140,11 @@ namespace ChatAppServer.Services
 				.OrderBy(message => message.SentTime)
 				.Select(message => new MessageDto
 				{
+					SenderId = message.Sender.Id,
 					SenderEmail = message.Sender.Email,
 					Text = message.Text,
 					SentTimeUtc = DateTime.SpecifyKind(message.SentTime, DateTimeKind.Utc),
 					SenderName = message.Sender.Name,
-					SenderId = message.Sender.Id,
 				})
 				.ToList();
 
