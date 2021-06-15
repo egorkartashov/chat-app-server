@@ -20,7 +20,7 @@ namespace ChatAppServer.Services
 			_chatDbContext = chatDbContext;
 		}
 		
-		public async Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, NewMessageDto messageDto)
+		public async Task<SaveMessageResult> SaveMessageToChatAsync(Guid senderId, Guid chatId, MessageDto messageDto)
 		{
 			try
 			{
@@ -70,8 +70,8 @@ namespace ChatAppServer.Services
 			}
 		}
 
-		public async Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail, 
-			NewMessageDto messageDto)
+		public async Task<SaveMessageResult> SavePersonalMessageAsync(Guid senderId, string receiverEmail,
+			MessageDto messageDto)
 		{
 			try
 			{

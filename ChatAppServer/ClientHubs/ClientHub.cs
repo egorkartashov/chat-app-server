@@ -32,7 +32,7 @@ namespace ChatAppServer.ClientHubs
 			_messagesService = messagesService;
 		}
 
-		public async Task SendPersonalMessageAsync(string receiverEmail, NewMessageDto messageDto)
+		public async Task SendPersonalMessageAsync(string receiverEmail, MessageDto messageDto)
 		{
 			Console.WriteLine($"SendPersonalMessageAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
 			if (_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
@@ -57,7 +57,7 @@ namespace ChatAppServer.ClientHubs
 			}
 		}
 
-		public async Task SendMessageToChatAsync(Guid chatId, NewMessageDto messageDto)
+		public async Task SendMessageToChatAsync(Guid chatId, MessageDto messageDto)
 		{
 			Console.WriteLine($"SendMessageToChatAsync {Context.ConnectionId}, {JsonConvert.SerializeObject(messageDto)}");
 			if (_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
