@@ -4,6 +4,7 @@ using ChatAppServer.ClientConnections;
 using ChatAppServer.ClientHubs;
 using ChatAppServer.DataAccess;
 using ChatAppServer.DataAccess.Entities;
+using ChatAppServer.Dto;
 using ChatAppServer.Models;
 using ChatAppServer.Services;
 using Microsoft.AspNetCore.Builder;
@@ -124,6 +125,8 @@ namespace ChatAppServer
 				cfg.CreateMap<User, UserEntity>();
 				cfg.CreateMap<UserEntity, User>();
 				cfg.CreateMap<GoogleUserInfo, User>();
+				cfg.CreateMap<UserEntity, UserDto>();
+				cfg.CreateMap<UserDto, UserEntity>();
 			});
 
 			var mapper = config.CreateMapper();

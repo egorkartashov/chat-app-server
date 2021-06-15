@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ChatAppServer.Auth;
 using ChatAppServer.ClientConnections;
@@ -88,11 +87,11 @@ namespace ChatAppServer.ClientHubs
 			return user;
 		}
 		
-		public async Task<List<ChatDto>> GetChatsAsync()
+		public async Task<List<ChatroomDto>> GetChatsAsync()
 		{
 			Console.WriteLine($"GetChatsAsync, {Context.ConnectionId}");
 			if (!_clientConnectionsCache.TryGetClientConnection(Context.ConnectionId, out var clientConnection))
-				return new List<ChatDto>();
+				return new List<ChatroomDto>();
 
 			var chatsDtos = await _chatsService.GetAvailableChatsAsync(clientConnection.User.Id);
 			return chatsDtos;
@@ -105,10 +104,10 @@ namespace ChatAppServer.ClientHubs
 			return messages;
 		}
 
-		public async Task CreateChatroomAsync(ChatroomDto chatroomDto)
+		public async Task CreateChatroomAsync(NewChatroomDto newChatroomDto)
 		{
 			var connectionId = Context.ConnectionId;
-			Console.WriteLine($"CreateChatroomAsync, chatroomDto = {JsonConvert.SerializeObject(chatroomDto)}");
+			Console.WriteLine($"CreateChatroomAsync, chatroomDto = {JsonConvert.SerializeObject(newChatroomDto)}");
 			
 			try
 			{
@@ -118,7 +117,7 @@ namespace ChatAppServer.ClientHubs
 					return;
 				}
 
-				await _chatsService.CreateChatroomAsync(clientConnection.User.Id, chatroomDto);
+				await _chatsService.CreateChatroomAsync(clientConnection.User.Id, newChatroomDto);
 				await Clients.Client(connectionId).NotifyMessageReceivedAsync("Successfully created chatroom!");
 			}
 			catch (Exception e)
@@ -127,6 +126,30 @@ namespace ChatAppServer.ClientHubs
 				await Clients.Client(connectionId).NotifyMessageReceivedAsync("Internal server error while creating chatroom");
 			}
 		}
+		public async Task UpdateChatroomAsync(NewChatroomDto updatedChatroomDto)
+		{
+			var connectionId = Context.ConnectionId;
+			Console.WriteLine($"UpdateChatroomAsync, {nameof(updatedChatroomDto)} = {JsonConvert.SerializeObject(updatedChatroomDto)}");
+			
+			try
+			{
+				if (!_clientConnectionsCache.TryGetClientConnection(connectionId, out var clientConnection))
+				{
+					await Clients.Client(connectionId).NotifyMessageReceivedAsync("Did not find client connection");
+					return;
+				}
+
+				await _chatsService.UpdateChatroomAsync(updatedChatroomDto);
+				await Clients.Client(connectionId).NotifyMessageReceivedAsync("Successfully created chatroom!");
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);	
+				await Clients.Client(connectionId).NotifyMessageReceivedAsync("Internal server error while creating chatroom");
+			}
+		}
+		
+		
 		
 		public override async Task OnConnectedAsync()
 		{

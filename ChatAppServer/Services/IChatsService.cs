@@ -7,8 +7,10 @@ namespace ChatAppServer.Services
 {
 	public interface IChatsService
 	{
-		Task<List<ChatDto>> GetAvailableChatsAsync(Guid userId);
+		Task<List<ChatroomDto>> GetAvailableChatsAsync(Guid userId);
 
-		Task<bool> CreateChatroomAsync(Guid creatorId, ChatroomDto chatroomDto);
+		Task<bool> CreateChatroomAsync(Guid creatorId, NewChatroomDto newChatroomDto);
+
+		Task<bool> UpdateChatroomAsync(NewChatroomDto updatedChatroomDto);
 	}
 }
